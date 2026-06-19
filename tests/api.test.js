@@ -106,6 +106,25 @@ describe('clinic scheduler API', () => {
     expect(remaining.n).toBe(0);
   });
 
+  test('cannot double-book a slot', async () => {
+    const { app, availableSlotId } = freshApp();
+
+    // First booking should succeed.
+    const first = await request(app)
+      .post('/bookings')
+      .send({ slot_id: availableSlotId, holder_ref: 'PT-0001' });
+    expect(first.status).toBe(201);
+
+    // Second booking of the SAME slot must be refused. A slot that is already
+    // booked is not available, so the API should reject this with a 409
+    // (Conflict) instead of creating a second booking.
+    const second = await request(app)
+      .post('/bookings')
+      .send({ slot_id: availableSlotId, holder_ref: 'PT-0002' });
+
+    expect(second.status).toBe(409); // FAILS until POST /bookings checks slot availability
+  });
+
   test('POST /bookings rejects a missing slot with 404', async () => {
     const { app } = freshApp();
     const res = await request(app)
