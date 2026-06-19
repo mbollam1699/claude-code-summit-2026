@@ -1,0 +1,4 @@
+# Normalize line endings so clones on macOS, Windows, and WSL match.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

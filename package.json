@@ -1,0 +1,26 @@
+{
+  "name": "clinic-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fictional clinic appointment scheduler — synthetic sample data only, NO PHI. Teaching repo for the Claude Code Summit 2026.",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.17 <21"
+  },
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "seed": "node scripts/seed.js",
+    "setup": "npm install && npm run seed",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}
