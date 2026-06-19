@@ -28,6 +28,8 @@ A tiny REST API for booking and cancelling appointment slots:
 | `POST` | `/bookings` | Book an available slot. Body: `{ "slot_id": 1, "holder_ref": "PT-0001" }`. |
 | `DELETE` | `/bookings/:id` | Cancel a booking and free its slot. |
 | `GET`  | `/health` | Liveness check. |
+| `GET`  | `/docs` | **Swagger UI** — browsable, interactive API docs. |
+| `GET`  | `/openapi.json` | The OpenAPI 3 spec as JSON (source: `openapi.yaml`). |
 
 ### Data model (all synthetic)
 
@@ -98,6 +100,9 @@ npm test         # should be all green
 npm run seed     # only needed once, or to reset to a known state
 npm start        # serves on http://localhost:3000 (override with PORT)
 ```
+
+Then open **http://localhost:3000/docs** in a browser for the interactive
+Swagger UI, or hit the endpoints directly.
 
 Example request (in another terminal):
 

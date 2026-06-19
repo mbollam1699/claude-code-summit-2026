@@ -1,0 +1,249 @@
+openapi: 3.0.3
+info:
+  title: Clinic Scheduler API
+  version: 1.0.0
+  description: >
+    A fictional clinic appointment scheduler used as the shared teaching repo
+    for the Claude Code Summit 2026.
+
+    SYNTHETIC DATA ONLY - NO PHI. Provider names are fictional, locations are
+    made up, and bookings use opaque codes like "PT-0001". This API has no field
+    for, and must never hold, real patient information.
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+tags:
+  - name: providers
+  - name: slots
+  - name: bookings
+  - name: meta
+paths:
+  /health:
+    get:
+      tags: [meta]
+      summary: Liveness check
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+  /providers:
+    get:
+      tags: [providers]
+      summary: List all providers
+      responses:
+        '200':
+          description: Array of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Provider'
+  /providers/{id}/slots:
+    get:
+      tags: [providers]
+      summary: List a provider's slots
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Provider id
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [available, booked]
+          description: Optional status filter
+      responses:
+        '200':
+          description: Array of slots for the provider
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '400':
+          description: Invalid provider id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /slots:
+    get:
+      tags: [slots]
+      summary: List slots, optionally filtered by date and/or specialty
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Filter to slots starting on this calendar day (YYYY-MM-DD, UTC)
+        - name: specialty
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by the slot provider's specialty
+      responses:
+        '200':
+          description: Array of slots (each includes the provider specialty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlotWithSpecialty'
+  /bookings:
+    post:
+      tags: [bookings]
+      summary: Book an available slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slot_id, holder_ref]
+              properties:
+                slot_id:
+                  type: integer
+                  example: 2
+                holder_ref:
+                  type: string
+                  description: Opaque synthetic code. NOT a name or contact detail.
+                  example: PT-0001
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Slot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Slot is already booked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /bookings/{id}:
+    delete:
+      tags: [bookings]
+      summary: Cancel a booking and free its slot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Booking id
+      responses:
+        '204':
+          description: Cancelled (no content)
+        '400':
+          description: Invalid booking id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Provider:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Dr. A. Rivera
+        specialty:
+          type: string
+          example: Cardiology
+    Slot:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        provider_id:
+          type: integer
+          example: 1
+        location_id:
+          type: integer
+          example: 1
+        start_time:
+          type: string
+          format: date-time
+          example: '2026-06-22T09:00:00.000Z'
+        duration_min:
+          type: integer
+          example: 30
+        status:
+          type: string
+          enum: [available, booked]
+          example: available
+    SlotWithSpecialty:
+      allOf:
+        - $ref: '#/components/schemas/Slot'
+        - type: object
+          properties:
+            specialty:
+              type: string
+              example: Cardiology
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        slot_id:
+          type: integer
+          example: 2
+        holder_ref:
+          type: string
+          example: PT-0001
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: slot 2 is already booked
